@@ -1,0 +1,37 @@
+{
+  "name": "printer-app",
+  "version": "1.0.0",
+  "description": "FastAPI + Electron USB Printer App",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "one": "cd ../printer-agent-server && ./build.sh && mv main.bin ../electornApp/scripts/main.bin && cd ../electornApp && electron-builder"
+  },
+  "build": {
+    "asar": true,
+    "asarUnpack": ["scripts/**"],
+    "linux": {
+      "target": ["AppImage"],
+      "category": "Utility"
+    },
+    "mac": {
+      "target": ["dmg"]
+    },
+    "win": {
+      "target": ["nsis"]
+    },
+    "files": [
+      "electron/**/*",
+      "scripts/**/*",
+      "renderer.html",
+      "preload.js",
+      "node_modules/**/*",
+      "package.json"
+    ]
+  },
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electron-builder": "^24.0.0"
+  }
+}

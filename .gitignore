@@ -1,0 +1,14 @@
+.venv
+venv
+dist
+__pycache__
+build
+node_modules
+main.onefile-build
+main.build
+main.dist
+main.bin
+main.exe
+Cargo.lock
+target
+keys

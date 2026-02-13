@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' http: https: 'unsafe-inline' 'unsafe-eval'">
+  <title>Odoo Printer Manager</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <header class="header">
+    <img src="odoo-logo.svg" class="logo" alt="Odoo logo">
+    <h1>Printer Manager</h1>
+  </header>
+
+  <main class="container">
+    <!-- Device / API -->
+    <section class="panel">
+      <h2>Device / API</h2>
+      <div class="row">
+        <label>Device IP (auto):</label>
+        <input id="deviceIp" placeholder="Click Fetch IP" />
+        <button class="btn" id="btnFetchIp">Fetch IP</button>
+      </div>
+    </section>
+
+    <!-- Available Printers -->
+    <section class="panel">
+      <h2>Available Printers</h2>
+      <div class="row">
+        <button class="btn" id="btnRefreshPrinters">Refresh List</button>
+        <pre id="printerOutput">Any Error will appear here...</pre>
+      </div>
+      <div id="printerList" class="printer-list">
+        <!-- Printer URLs will be dynamically inserted here -->
+      </div>
+    </section>
+    
+    <section class="panel">
+      <h2>IP Printer URL Generator</h2>
+      <div class="row">
+        <label>Printer IP:</label>
+        <input id="manualIp" placeholder="e.g., 192.168.104.183" />
+      </div>
+      <div class="row">
+        <button class="btn btn-blue" id="btnGenerateUrl">Generate URL</button>
+      </div>
+      <div class="printer-list" id="manualUrlOutput">
+        <!-- Generated URL will appear here -->
+      </div>
+    </section>
+
+    <!-- Service Controls -->
+    <section class="panel">
+      <h2>Service Controls</h2>
+      <div class="row">
+        <button class="btn btn-green" id="btnAddService">Add & Enable</button>
+        <button class="btn btn-red" id="btnDeleteService">Delete</button>
+        <button class="btn" id="btnRestartService">Restart</button>
+      </div>
+      <p id="serviceOutput">Service output will appear here...</pre>
+    </section>
+
+  </main>
+
+  <script src="renderer.js">
+  </script>
+</body>
+</html>

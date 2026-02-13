@@ -1,0 +1,131 @@
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f3f4f6; /* light gray background */
+  margin: 0;
+  color: #4a4a4a; /* dark gray text */
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 40px;
+  background-color: #875A7B; /* Odoo purple */
+  color: white;
+}
+
+.header .logo {
+  height: 40px;
+}
+
+.container {
+  max-width: 900px;
+  margin: 30px auto;
+  padding: 0 20px;
+}
+
+.panel {
+  background-color: white;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+}
+
+.panel h2 {
+  margin-top: 0;
+  color: #875A7B; /* Odoo purple */
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.row label {
+  min-width: 150px;
+  font-weight: bold;
+  color: #4a4a4a;
+}
+
+input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #dcdcdc;
+  border-radius: 5px;
+}
+
+.btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: #875A7B; /* Odoo purple */
+  color: white;
+  transition: background-color 0.2s;
+}
+
+.btn:hover {
+  background-color: #6b4561; /* darker purple */
+}
+
+.btn-green {
+  background-color: #78B159; /* Odoo green */
+}
+
+.btn-green:hover {
+  background-color: #5f9146;
+}
+
+.btn-red {
+  background-color: #E05151; /* Odoo red */
+}
+
+.btn-red:hover {
+  background-color: #b54040;
+}
+
+.btn-blue {
+  background-color: #348FE2; /* Odoo blue */
+}
+
+.btn-blue:hover {
+  background-color: #2a72b0;
+}
+
+.printer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.printer-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #f9f9fb;
+}
+
+.printer-url {
+  word-break: break-all;
+  font-family: monospace;
+}
+
+.btn-copy {
+  background-color: #348FE2;
+}
+
+.btn-copy:hover {
+  background-color: #2a72b0;
+}
+
+.empty {
+  color: #999;
+  font-style: italic;
+}
