@@ -8,7 +8,7 @@ A cross-platform FastAPI-based local print agent to communicate with ESC/POS the
 
 🚀 Features
 -----------
-- ✅ FastAPI backend with HTTPS (SSL included)
+- ✅ FastAPI backend with HTTP(use LNA for sending request from https)
 - ✅ ESC/POS raster image printing
 - ✅ Cash drawer pulse support
 - ✅ Printer status reporting (cover open, paper error, etc.)
@@ -38,75 +38,141 @@ build_windows.bat
 
 📦 Dependencies (frozen)
 ------------------------
-- fastapi==0.115.12
-- uvicorn==0.34.3
-- pydantic==2.11.5
-- pyinstaller==6.14.1
+- fastapi===0.115.12
+- uvicorn[standard]===0.38.0
+- pydantic===2.11.5
+- nuitka===2.8.6
 - python-escpos===3.1
-- pyusb===25.2
+- pyusb===1.3.1
+- jinja2===3.0.3
+- python-multipart===0.0.20
+- zeroconf===0.148.0
+
 
 ---
 
-🔐 SSL Certificates
---------------------
 
-If not already present, generate with:
+# 📬 API Endpoints
 
-```bash
-openssl req -x509 -newkey rsa:2048 -nodes \
-  -keyout key.pem -out cert.pem -days 365 \
-  -subj "/CN=localhost"
+------------------------------------------------------------------------
+
+##  POST /vid/{vid}/pid/{pid}/cgi-bin/epos/service.cgi
+
+Print via USB printer using Vendor ID (VID) and Product ID (PID).
+
+### Path Parameters
+
+-   **vid**: USB Vendor ID\
+-   **pid**: USB Product ID
+
+
+### Body
+```xml
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+    <s:Body>
+        <epos-print xmlns="http://www.epson-pos.com/schemas/2011/03/epos-print">
+            <feed line="1" />
+            <text align="center">This is a test receipt&#10;</text>
+            <feed line="3" />
+            <cut type="feed" />
+        </epos-print>
+    </s:Body>
+</s:Envelope>
 ```
 
----
+### Success Response
 
-📬 API Endpoints
-----------------
-
-### `GET /`
-Check if the server is up.
-
-**Response:**
-```json
-{ "message": "Printer server is working!" }
+XML success response.
+```xml
+<response success='true' code=''></response>
 ```
 
-### `POST /pos/print/`
-Send rasterized receipt data to the printer.
+### Error Responses
 
-**Request Body:**
-```json
-{
-  "raster_base64": "<base64-encoded-image>",
-  "width": 576,
-  "height": 100,
-  "nw_printer_ip": "192.168.0.100:9100",
-  "cash_drawer": true
-}
+-   `USB_ERROR` 
+```xml
+<response success='false' code='USB_ERROR'></response>
+```
+-   `PARSE_ERROR`
+```xml
+<response success='false' code='PARSE_ERROR'></response>
+```
+------------------------------------------------------------------------
+
+## POST /ip/{ip}/cgi-bin/epos/service.cgi
+
+Print via network printer using IP address.
+
+### Path Parameters
+
+-   **ip**: Printer IP Address
+
+
+### Body
+```xml
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+    <s:Body>
+        <epos-print xmlns="http://www.epson-pos.com/schemas/2011/03/epos-print">
+            <feed line="1" />
+            <text align="center">This is a test receipt&#10;</text>
+            <feed line="3" />
+            <cut type="feed" />
+        </epos-print>
+    </s:Body>
+</s:Envelope>
 ```
 
-**Success Response:**
-```json
-{ "status": "success" }
+
+### Success Response
+
+XML success response.
+```xml
+<response success='true' code=''></response>
 ```
 
-**Failure Response:**
-```json
-{ "status": "error", "message": { "Printer Status": ["Printer is busy"] } }
+### Error Responses
+
+-   `USB_ERROR` 
+```xml
+<response success='false' code='USB_ERROR'></response>
+```
+-   `PARSE_ERROR`
+```xml
+<response success='false' code='PARSE_ERROR'></response>
+```
+------------------------------------------------------------------------
+### POST /vid/{vid}/pid/{pid}/success/cgi-bin/epos/service.cgi
+
+Simulated success endpoint for USB printer.
+
+### Path Parameters
+
+-   **vid**: USB Vendor ID\
+-   **pid**: USB Product ID
+
+
+### Body
+```xml
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+    <s:Body>
+        <epos-print xmlns="http://www.epson-pos.com/schemas/2011/03/epos-print">
+            <feed line="1" />
+            <text align="center">This is a test receipt&#10;</text>
+            <feed line="3" />
+            <cut type="feed" />
+        </epos-print>
+    </s:Body>
+</s:Envelope>
 ```
 
----
 
-🖨️ Supported Status Checks
----------------------------
-- Printer Status
-- Offline Status
-- Error Status
-- Paper Status
+### Success Response
 
-Returned in human-readable form to help with diagnostics.
+XML success response.
+```xml
+<response success='true' code=''></response>
+```
 
----
 
 🧪 Running the Server After Build
 ---------------------------------
@@ -119,5 +185,5 @@ dist\main.exe       # Windows
 It runs on:
 
 ```
-https://{your_device_ip_address}:8088/
+http://{your_device_ip_address}:8089/
 ```
