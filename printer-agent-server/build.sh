@@ -4,13 +4,13 @@ set -e
 
 echo "📦 Creating virtual environment..."
 
-python3.12 -m venv venv
+python3 -m venv venv
 source ./venv/bin/activate
 
 echo "📥 Installing requirements..."
-python3.12 -m pip install --upgrade pip
-python3.12 -m pip install -r requirements.txt
-python3.12 -m pip install nuitka
+python3 -m pip install --upgrade pip
+python3 -m pip install -r requirements.txt
+python3 -m pip install nuitka
 
 echo "🔍 Locating escpos capabilities.json..."
 CAP_JSON=$(find ./venv -name capabilities.json | head -n 1)

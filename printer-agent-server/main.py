@@ -15,7 +15,7 @@ import ddl_path
 
 from set_local_ip import get_lan_ip
 
-PORT=8089
+PORT=8090
 
 
 logging.basicConfig(level=logging.INFO)

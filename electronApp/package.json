@@ -6,7 +6,8 @@
   "scripts": {
     "start": "electron .",
     "build": "electron-builder",
-    "one": "cd ../printer-agent-server && ./build.sh && mv main.bin ../electornApp/scripts/main.bin && cd ../electornApp && electron-builder"
+    "one": "cd ../printer-agent-server && ./build.sh && mv main.bin ../electronApp/scripts/main.bin && cd ../electronApp && electron-builder",
+    "one_win": "cd ..\\printer-agent-server && build_windows.bat && move main.exe ..\\electronApp\\scripts\\main.exe && cd ..\\electronApp && electron-builder"
   },
   "build": {
     "asar": true,
