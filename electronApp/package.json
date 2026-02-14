@@ -6,21 +6,29 @@
   "scripts": {
     "start": "electron .",
     "build": "electron-builder",
-    "one": "cd ../printer-agent-server && ./build.sh && mv main.bin ../electronApp/scripts/main.bin && cd ../electronApp && electron-builder",
-    "one_win": "cd ..\\printer-agent-server && build_windows.bat && move main.exe ..\\electronApp\\scripts\\main.exe && cd ..\\electronApp && electron-builder"
+    "one": "cd ../odoo-printer-manager && cargo build --release && mv ./target/release/odoo_printer_manager ../electronApp/scripts/main && cd ../electronApp && electron-builder",
+    "one_win": "rustup target add i686-pc-windows-msvc && cd ..\\odoo-printer-manager && cargo build --release --target i686-pc-windows-msvc && copy /Y .\\target\\i686-pc-windows-msvc\\release\\odoo_printer_manager.exe ..\\electronApp\\scripts\\main.exe && cd ..\\electronApp && electron-builder"
   },
   "build": {
     "asar": true,
-    "asarUnpack": ["scripts/**"],
+    "asarUnpack": [
+      "scripts/**"
+    ],
     "linux": {
-      "target": ["AppImage"],
+      "target": [
+        "AppImage"
+      ],
       "category": "Utility"
     },
-    "mac": {
-      "target": ["dmg"]
-    },
     "win": {
-      "target": ["nsis"]
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "ia32"
+          ]
+        }
+      ]
     },
     "files": [
       "electron/**/*",

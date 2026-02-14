@@ -109,12 +109,12 @@ function getMainBinPath() {
         if (process.platform === "win32") {
             return getTempScriptPath("main.exe");
         }
-        return getTempScriptPath("main.bin");
+        return getTempScriptPath("main");
     } else {
         // Development mode (npm start)
         if (process.platform === "win32")
             return path.join(__dirname, "..", "/scripts/main.exe");
-        return path.join(__dirname, "..", "/scripts/main.bin");
+        return path.join(__dirname, "..", "/scripts/main");
     }
 }
 
