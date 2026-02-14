@@ -1,0 +1,135 @@
+name: Build Electron Apps (Linux & Windows)
+
+permissions:
+  contents: write
+
+on:
+  push:
+    branches:
+      - build
+  workflow_dispatch:
+
+jobs:
+
+  # =====================================
+  # LINUX BUILD
+  # =====================================
+  build-linux:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # Install Node
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Install dependencies
+      - name: Install dependencies
+        run: |
+          cd electronApp
+          npm install
+
+      # Run your Linux build command
+      - name: Build Linux Electron App
+        run: |
+          cd electronApp
+          npm run one
+
+      # Create release directory
+      - name: Create release directory
+        run: mkdir -p release
+
+      # Move AppImage to release folder
+      - name: Move Linux build to release
+        run: |
+          mv electronApp/dist/*.AppImage release/
+
+      # Upload artifact (optional but recommended)
+      - name: Upload Linux Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-build
+          path: release/*.AppImage
+
+
+  # =====================================
+  # WINDOWS BUILD
+  # =====================================
+  build-windows:
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # Install Node
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Install dependencies
+      - name: Install dependencies
+        shell: powershell
+        run: |
+          cd electronApp
+          npm install
+
+      # Run your Windows build command
+      - name: Build Windows Electron App
+        shell: powershell
+        run: |
+          cd electronApp
+          npm run one_win
+
+      # Create release directory
+      - name: Create release directory
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path release
+
+      # Move Windows build to release
+      - name: Move Windows build to release
+        shell: powershell
+        run: |
+          Move-Item electronApp\dist\*.exe release\ -Force
+          Move-Item odoo-printer-manager\target\i686-pc-windows-msvc\release\*.exe release\ -Force
+
+      # Upload artifact (recommended)
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: release\*.exe
+
+
+  # =========================
+  # CREATE PUBLIC RELEASE
+  # =========================
+  release:
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-build
+          path: release
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-build
+          path: release
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: Printer App v${{ github.run_number }}
+          files: release/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
