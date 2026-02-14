@@ -7,7 +7,7 @@
     "start": "electron .",
     "build": "electron-builder",
     "one": "cd ../odoo-printer-manager && cargo build --release && mv ./target/release/odoo_printer_manager ../electronApp/scripts/main && cd ../electronApp && electron-builder",
-    "one_win": "rustup target add i686-pc-windows-msvc && cd ..\\odoo-printer-manager && cargo build --release --target i686-pc-windows-msvc && copy /Y .\\target\\i686-pc-windows-msvc\\release\\odoo_printer_manager.exe ..\\electronApp\\scripts\\main.exe && cd ..\\electronApp && electron-builder"
+    "one_win": "set RUSTFLAGS=-C target-feature=+crt-static && rustup target add i686-pc-windows-msvc && cd ..\\odoo-printer-manager && cargo build --release --target i686-pc-windows-msvc && copy /Y .\\target\\i686-pc-windows-msvc\\release\\odoo_printer_manager.exe ..\\electronApp\\scripts\\main.exe && cd ..\\electronApp && electron-builder"
   },
   "build": {
     "asar": true,
