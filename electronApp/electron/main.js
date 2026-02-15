@@ -1,167 +1,138 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, Tray, Menu, ipcMain } = require("electron");
 const path = require("path");
-const fs = require("fs");
 const os = require("os");
-const { execFile } = require("child_process");
+const { spawn } = require("child_process");
 
-/**
- * Get a safe path for a script.
- * Copies the script to /tmp to ensure it can be executed in AppImage.
- */
-function getTempScriptPath(scriptName) {
-    const original = app.isPackaged
-        ? path.join(process.resourcesPath, "app.asar.unpacked", "scripts", scriptName)
-        : path.join(__dirname, "..", "scripts", scriptName);
+let mainWindow;
+let tray;
+let serverProcess;
 
-    if (!fs.existsSync(original)) {
-        throw new Error(`Script not found: ${original}`);
+function startServer() {
+    let serverPath;
+
+    if (process.platform === "win32") {
+        serverPath = path.join(__dirname, "../scripts/main.exe");
+    } else {
+        serverPath = path.join(__dirname, "../scripts/main");
     }
 
-    const tempPath = path.join(os.tmpdir(), scriptName);
+    serverProcess = spawn(serverPath, [], {
+        detached: false
+    });
 
-    // Copy script to temp folder (overwrite if exists)
-    fs.copyFileSync(original, tempPath);
+    serverProcess.stdout.on("data", (data) => {
+        console.log(`Server: ${data}`);
+    });
 
-    // Make executable on Linux/macOS
-    if (process.platform !== "win32") {
-        fs.chmodSync(tempPath, 0o755);
-    }
+    serverProcess.stderr.on("data", (data) => {
+        console.error(`${data}`);
+    });
 
-    return tempPath;
-}
-
-/**
- * Run a script safely and return stdout or reject with stderr.
- * If useRoot is true, tries pkexec on Linux/macOS.
- */
-function runScript(scriptName, useRoot = false, args = []) {
-    const scriptPath = getTempScriptPath(scriptName);
-
-    return new Promise((resolve, reject) => {
-        let command;
-        let execArgs = [];
-
-        // ---------- WINDOWS ----------
-        if (process.platform === "win32") {
-            const pwsh7 = "C:\\Program Files\\PowerShell\\7\\pwsh.exe";
-            command = fs.existsSync(pwsh7) ? pwsh7 : "powershell.exe";
-
-            if (useRoot) {
-                // Run as admin
-                execArgs = [
-                    "-NoProfile",
-                    "-Command",
-                    `Start-Process '${command}' -Verb RunAs -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File','${scriptPath}',${args.map(a => `'${a}'`).join(",")}`
-                ];
-            } else {
-                execArgs = [
-                    "-NoLogo",
-                    "-NoProfile",
-                    "-ExecutionPolicy", "Bypass",
-                    "-File", scriptPath,
-                    ...args
-                ];
-            }
-        }
-
-        // ---------- LINUX ----------
-        else if (process.platform === "linux") {
-            // Try pkexec
-            if (useRoot) {
-                command = "pkexec";
-                execArgs = ["bash", scriptPath, ...args];
-            } else {
-                command = "bash";
-                execArgs = [scriptPath, ...args];
-            }
-        }
-
-        // ---------- MACOS ----------
-        else if (process.platform === "darwin") {
-            if (useRoot) {
-                command = "osascript";
-                execArgs = [
-                    "-e",
-                    `do shell script "bash '${scriptPath}' ${args.join(" ")}" with administrator privileges`
-                ];
-            } else {
-                command = "bash";
-                execArgs = [scriptPath, ...args];
-            }
-        }
-
-        execFile(command, execArgs, { env: process.env }, (error, stdout, stderr) => {
-            if (error) {
-                console.error("Script error:", error);
-                console.error("stderr:", stderr);
-                return reject(stderr || error.message);
-            }
-            console.log("Script stdout:", stdout);
-            resolve(stdout);
-        });
+    serverProcess.on("close", (code) => {
+        console.log(`Server exited with code ${code}`);
     });
 }
 
-
-function getMainBinPath() {
-    if (app.isPackaged) {
-        // In AppImage or installer, use app.asar.unpacked
-        if (process.platform === "win32") {
-            return getTempScriptPath("main.exe");
-        }
-        return getTempScriptPath("main");
-    } else {
-        // Development mode (npm start)
-        if (process.platform === "win32")
-            return path.join(__dirname, "..", "/scripts/main.exe");
-        return path.join(__dirname, "..", "/scripts/main");
+function stopServer() {
+    if (serverProcess) {
+        serverProcess.kill();
+        serverProcess = null;
     }
 }
 
-
-/**
- * Create the main Electron window
- */
 function createWindow() {
-    const win = new BrowserWindow({
+    mainWindow = new BrowserWindow({
         width: 600,
         height: 650,
+        show: true,
         webPreferences: {
             preload: path.join(__dirname, "preload.js"),
         },
     });
 
-    win.loadFile(path.join(__dirname, "renderer.html"));
+    mainWindow.loadFile(path.join(__dirname, "renderer.html"));
+
+    mainWindow.on("close", (event) => {
+        if (!app.isQuiting) {
+            event.preventDefault();
+            mainWindow.hide();
+        }
+    });
 }
 
-function scriptForOS(baseName) {
-    const platform = process.platform;
+app.whenReady().then(() => {
 
-    if (platform === "win32") {
-        return `${baseName}.ps1`;
-    } else {
-        return `${baseName}.sh`;
-    }
-}
+    // Auto start at login
+    app.setLoginItemSettings({
+        openAtLogin: true
+    });
 
-// Global OS-specific run
-function runOSScript(baseName, useRoot = false, args = []) {
-    const scriptName = scriptForOS(baseName);
-    return runScript(scriptName, useRoot, args);
-}
+    startServer();
 
-// IPC handlers
-ipcMain.handle("run:add_service", async () => {
-    const mainBin = getMainBinPath();
-    return runOSScript("add_service", true, [mainBin]);
+    createWindow();
+
+    tray = new Tray(path.join(__dirname, "icon.jpg"));
+
+    const contextMenu = Menu.buildFromTemplate([
+        {
+            label: "Open",
+            click: () => mainWindow.show()
+        },
+        {
+            label: "Stop Server",
+            click: () => stopServer()
+        },
+        {
+            label: "Quit",
+            click: () => {
+                app.isQuiting = true;
+                stopServer();
+                app.quit();
+            }
+        }
+    ]);
+
+    tray.setContextMenu(contextMenu);
 });
 
-ipcMain.handle("run:delete_service", () => runOSScript("delete_service", true));
+ipcMain.handle("run:add_service", async () => {
+    // const mainBin = getMainBinPath();
+    // return runOSScript("add_service", true, [mainBin]);
+});
 
-ipcMain.handle("run:restart_service", () => runOSScript("restart_service", true));
+ipcMain.handle("run:delete_service", () => {
+    console.log("not implemented");
+}
+);
 
-ipcMain.handle("run:get_ip", () => runOSScript("get_ip"));
+ipcMain.handle("run:restart_service", () => {
+    console.log("not implemented");
+
+}
+);
+
+ipcMain.handle("run:get_ip", () => getLocalIP() + ":8089");
 
 
-// App ready
-app.whenReady().then(createWindow);
+app.on("window-all-closed", (e) => {
+    e.preventDefault();
+});
+
+
+
+function getLocalIP() {
+    const interfaces = os.networkInterfaces();
+
+    for (const name of Object.keys(interfaces)) {
+        for (const iface of interfaces[name]) {
+            if (
+                iface.family === "IPv4" &&
+                !iface.internal
+            ) {
+                return iface.address;
+            }
+        }
+    }
+
+    return "127.0.0.1";
+}
